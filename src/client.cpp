@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sstream>
+#include <string>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
@@ -58,10 +59,19 @@ main(int argc, char **argv)
 	recv(sock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
         
-        memset(buffer, 0, MAX_BUFF);
+        memset(buffer, 0, MAX_BUFF); //get question
         recv(sock, buffer, MAX_BUFF, 0);
         //parse(buffer);
-        ask(parse(buffer));
+        string ans = to_string(ask(parse(buffer)));
+        send(sock, ans.c_str(), strlen(ans.c_str()), 0);
+        
+        memset(buffer, 0, MAX_BUFF);
+        recv(sock, buffer, MAX_BUFF, 0); //get correct flag
+        if (buffer[0] - '0') {
+            cout << "Correct Answer!" << endl;
+        } else {
+            cout << "Incorrect Answer!" << endl;
+        }
 
 	close(sock);
 	return 0;

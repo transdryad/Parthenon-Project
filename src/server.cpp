@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <string>
 
 #define MAX_QUEUE 5
 #define MAX_BUFF 1024
@@ -76,9 +77,17 @@ int main(int argc, char **argv)
     for (auto q : questions) {
         string packet;
         packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
-        cout << packet;
+        cout << packet << endl;
         send(csock, packet.c_str(), strlen(packet.c_str()), 0);
-        
+        memset(buffer, 0, MAX_BUFF);
+        recv(csock, buffer, MAX_BUFF, 0);
+        int ans = buffer[0] - '0';
+        cout << ans << endl;
+        if (q.correct == ans) { //TODO: score tracking here
+            send(csock, "1", 1, 0);
+        } else {
+            send(csock, "0", 1, 0);
+        }
         //std::cout << q.question << ":";
         //for (auto a : q.answers) { std::cout << " " << a; }
         //std::cout << ". " << q.correct << std::endl;
