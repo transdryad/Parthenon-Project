@@ -1,0 +1,8 @@
+# [Server]
+# ip or smth ig?
+
+questions = [
+    ["How many dogs can live in a house?", ["1", "3", "5", "7"], 2,],
+]
+
+

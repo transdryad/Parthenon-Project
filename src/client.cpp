@@ -6,6 +6,20 @@
 #include <arpa/inet.h>
 
 #define MAX_BUFF 1024
+#include "src/question.hpp"
+
+int ask(Question question) {
+    std::cout << question.question << std::endl;
+    std::cout << "1: " << question.answers[0] << std::endl;
+    std::cout << "2: " << question.answers[1] << std::endl;
+    std::cout << "3: " << question.answers[2] << std::endl;
+    std::cout << "4: " << question.answers[3] << std::endl;
+    std::cout << "Your Answer: ";
+    int answer;
+    std::cin >> answer;
+    std::cout << std::endl;
+    return answer;
+}
 
 using namespace std;
 
@@ -30,6 +44,5 @@ main(int argc, char **argv)
 	cout << buffer << endl;
 
 	close(sock);
-
-    return 0;
+	return 0;
 }
