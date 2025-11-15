@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	addr.sin_port = htons(8080); /* change in prod */
 	addr.sin_addr.s_addr = INADDR_ANY;
 
-	bind(sock, addr, sizeof(addr));
+	bind(sock, (struct sockaddr*)&addr, sizeof(addr));
 
 	listen(sock, MAX_QUEUE); /* should probably paralellized,
 	so small queue per instance, if such */
@@ -28,6 +28,9 @@ int main(int argc, char **argv)
 	char buffer[MAX_BUFF] = { 0 };
 	recv(csock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
+
+	const char *msg = "Basic server-to-client test";
+	send(csock, msg, strlen(msg), 0);
 
 	close(sock);
 
