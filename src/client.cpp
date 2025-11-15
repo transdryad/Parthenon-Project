@@ -25,11 +25,12 @@ int ask(Question question) {
 }
 
 Question parse(char* buffer) {
+    cout << "Buf: " << buffer << endl;;
     stringstream ss(string(buffer, strlen(buffer)));
     string t;
     string strings[5];
+    int i = 0;
     while (getline(ss, t, '%')) {
-        int i = 0;
         strings[i] = t;
         i++;
     }
@@ -37,20 +38,18 @@ Question parse(char* buffer) {
     return Question(strings[0], answers, 5);
 }
 
-using namespace std;
-
 int
 main(int argc, char **argv)
 {
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
-
+        if (sock < 1) {cerr << "Error allocating socket"; exit(errno);}
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(atoi(argv[2]));
 	addr.sin_addr.s_addr = inet_addr(argv[1]);
 
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-		return errno;
+		exit(errno);
 
 	const char *msg = "Basic client-to-server test";
 	send(sock, msg, strlen(msg), 0);

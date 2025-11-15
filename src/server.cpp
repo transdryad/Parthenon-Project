@@ -49,19 +49,21 @@ int main(int argc, char **argv)
         return 1;
     }
     int sock = socket(AF_INET, SOCK_STREAM, 0);
-
+    if (sock < 1) {cerr << "Error allocating socket"; exit(errno);}
+    int yes = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(atoi(argv[2]));
     addr.sin_addr.s_addr = inet_addr(argv[1]);
 
-    bind(sock, (struct sockaddr*)&addr, sizeof(addr));
-
+    int b = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+    if (b == -1) {cerr << "Error binding to port"; exit(errno);}
     listen(sock, MAX_QUEUE); /* should probably paralellized,
                                 so small queue per instance, if such */
 
     int csock = accept(sock, nullptr, nullptr);
-
+    if (csock < 1) {cerr << "Error allocating socket"; exit(errno);}
     char buffer[MAX_BUFF] = { 0 };
     recv(csock, buffer, MAX_BUFF, 0);
     cout << buffer << endl;
@@ -69,17 +71,19 @@ int main(int argc, char **argv)
     const char *msg = "Basic server-to-client test";
     send(csock, msg, strlen(msg), 0);
 
-    std::vector<Question> questions = parse(argv[4]);
+    std::vector<Question> questions = parse(argv[3]);
 
     for (auto q : questions) {
         string packet;
         packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
-        send(csock, packet.c_str(), sizeof(packet.c_str()), 0);
+        cout << packet;
+        send(csock, packet.c_str(), strlen(packet.c_str()), 0);
         
-        std::cout << q.question << ":";
-        for (auto a : q.answers) { std::cout << " " << a; }
-        std::cout << ". " << q.correct << std::endl;
+        //std::cout << q.question << ":";
+        //for (auto a : q.answers) { std::cout << " " << a; }
+        //std::cout << ". " << q.correct << std::endl;
     }
+    close(csock);
     close(sock);
 
     return 0;
