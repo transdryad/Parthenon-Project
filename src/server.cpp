@@ -44,40 +44,43 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  if (argc < 4) {
-    std::cerr << "Usage: " << argv[0] << " <ip> <addr> <qfile>" << std::endl;
-    return 1;
-  }
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " <ip> <addr> <qfile>" << std::endl;
+        return 1;
+    }
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(atoi(argv[2]));
-	addr.sin_addr.s_addr = inet_addr(argv[1]);
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(atoi(argv[2]));
+    addr.sin_addr.s_addr = inet_addr(argv[1]);
 
-	bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+    bind(sock, (struct sockaddr*)&addr, sizeof(addr));
 
-	listen(sock, MAX_QUEUE); /* should probably paralellized,
-	so small queue per instance, if such */
+    listen(sock, MAX_QUEUE); /* should probably paralellized,
+                                so small queue per instance, if such */
 
-	int csock = accept(sock, nullptr, nullptr);
+    int csock = accept(sock, nullptr, nullptr);
 
-	char buffer[MAX_BUFF] = { 0 };
-	recv(csock, buffer, MAX_BUFF, 0);
-	cout << buffer << endl;
+    char buffer[MAX_BUFF] = { 0 };
+    recv(csock, buffer, MAX_BUFF, 0);
+    cout << buffer << endl;
 
-	const char *msg = "Basic server-to-client test";
-	send(csock, msg, strlen(msg), 0);
-
-	close(sock);
+    const char *msg = "Basic server-to-client test";
+    send(csock, msg, strlen(msg), 0);
 
     std::vector<Question> questions = parse(argv[4]);
 
     for (auto q : questions) {
+        string packet;
+        packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
+        send(csock, packet.c_str(), sizeof(packet.c_str()), 0);
+        
         std::cout << q.question << ":";
         for (auto a : q.answers) { std::cout << " " << a; }
         std::cout << ". " << q.correct << std::endl;
     }
+    close(sock);
 
     return 0;
 }

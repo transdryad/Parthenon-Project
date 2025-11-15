@@ -4,9 +4,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sstream>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
+
+using namespace std;
 
 int ask(Question question) {
     std::cout << question.question << std::endl;
@@ -19,6 +22,19 @@ int ask(Question question) {
     std::cin >> answer;
     std::cout << std::endl;
     return answer;
+}
+
+Question parse(char* buffer) {
+    stringstream ss(string(buffer, strlen(buffer)));
+    string t;
+    string strings[5];
+    while (getline(ss, t, '%')) {
+        int i = 0;
+        strings[i] = t;
+        i++;
+    }
+    string answers[4] = {strings[1], strings[2], strings[3], strings[4]};
+    return Question(strings[0], answers, 5);
 }
 
 using namespace std;
@@ -42,6 +58,11 @@ main(int argc, char **argv)
 	char buffer[MAX_BUFF] = { 0 };
 	recv(sock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
+        
+        memset(buffer, 0, MAX_BUFF);
+        recv(sock, buffer, MAX_BUFF, 0);
+        //parse(buffer);
+        ask(parse(buffer));
 
 	close(sock);
 	return 0;
