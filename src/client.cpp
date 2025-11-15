@@ -4,9 +4,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sstream>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
+
+using namespace std;
 
 int ask(Question question) {
     std::cout << question.question << std::endl;
@@ -21,20 +24,32 @@ int ask(Question question) {
     return answer;
 }
 
-using namespace std;
+Question parse(char* buffer) {
+    cout << "Buf: " << buffer << endl;;
+    stringstream ss(string(buffer, strlen(buffer)));
+    string t;
+    string strings[5];
+    int i = 0;
+    while (getline(ss, t, '%')) {
+        strings[i] = t;
+        i++;
+    }
+    string answers[4] = {strings[1], strings[2], strings[3], strings[4]};
+    return Question(strings[0], answers, 5);
+}
 
 int
 main(int argc, char **argv)
 {
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
-
+        if (sock < 1) {cerr << "Error allocating socket"; exit(errno);}
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(atoi(argv[2]));
 	addr.sin_addr.s_addr = inet_addr(argv[1]);
 
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-		return errno;
+		exit(errno);
 
 	const char *msg = "Basic client-to-server test";
 	send(sock, msg, strlen(msg), 0);
@@ -42,6 +57,11 @@ main(int argc, char **argv)
 	char buffer[MAX_BUFF] = { 0 };
 	recv(sock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
+        
+        memset(buffer, 0, MAX_BUFF);
+        recv(sock, buffer, MAX_BUFF, 0);
+        //parse(buffer);
+        ask(parse(buffer));
 
 	close(sock);
 	return 0;
