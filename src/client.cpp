@@ -16,8 +16,8 @@ main(int argc, char **argv)
 
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(8080); /* change in prod */
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_port = htons(atoi(argv[2]));
+	addr.sin_addr.s_addr = inet_addr(argv[1]);
 
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
 		return errno;
