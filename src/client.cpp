@@ -19,7 +19,8 @@ main(int argc, char **argv)
 	addr.sin_port = htons(8080); /* change in prod */
 	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+		return errno;
 
 	const char *msg = "Basic client-to-server test";
 	send(sock, msg, strlen(msg), 0);
