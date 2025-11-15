@@ -12,7 +12,7 @@ std::vector<Question> parse(std::string filename) {
         tbl = toml::parse_file(filename);
     } catch (const toml::parse_error& err) {
         std::cerr << "Parsing failed:\n" << err << "\n";
-        return 1;
+        exit(1);
     }
 
     //std::cout << tbl["questions"] << std::endl;
