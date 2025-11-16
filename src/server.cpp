@@ -11,32 +11,54 @@
 #define MAX_BUFF 1024
 #include <vector>
 #include <optional>
+#include <fstream>
 #include "src/question.hpp"
-#include "src/toml.hpp"
+
+std::string split(std::string input) {
+    std::string substring;
+    substring = input.substr(input.find("\"") + 1);
+    substring.pop_back();
+    return substring;
+}
 
 std::vector<Question> parse(std::string filename) {
-    toml::table tbl;
     std::vector<Question> questions;
+    std::vector<std::string> lines;
+    std::ifstream ifs(filename);
+    std::string line;
 
-    try { //parse toml into memory
-        tbl = toml::parse_file(filename);
-    } catch (const toml::parse_error& err) {
-        std::cerr << "Parsing failed:\n" << err << "\n";
+    if (ifs.is_open()) {
+        while (getline(ifs, line)) {
+            lines.push_back(line);
+        }
+    } else {
+        std::cerr << "File note found/read error for questions";
         exit(1);
     }
-
+    
+    ifs.close();
+    
     //std::cout << tbl["questions"] << std::endl;
-    for (size_t i = 0; i < tbl["questions"].as_array()->size(); i++) { //put questions in our nice data structure
-        std::optional<std::string> question = tbl["questions"][i][0].value<std::string>();
-        std::optional<int> correct = tbl["questions"][i][2].value<int>();
-
+    for (size_t i = 0; i < lines.size(); i++) { //put questions in our nice data structure
+        std::string question;
         std::string answers[4];
-        for (int j = 0; j < 4; j++) {
-            std::optional<std::string> thing = tbl["questions"][i][1][j].value<std::string>();
-            answers[j] = thing.value_or("");
-        }
+        int correct;
 
-        questions.emplace_back(question.value_or(""), answers, correct.value_or(0));
+        if (lines[i] == "[Question]") {
+            ++i;
+            question = split(lines[i]);
+            ++i;
+            answers[0] = split(lines[i]);
+            ++i;
+            answers[1] = split(lines[i]);
+            ++i;
+            answers[2] = split(lines[i]);
+            ++i;
+            answers[3] = split(lines[i]);
+            ++i;
+            correct = lines[i].back() - '0';
+        }
+        questions.emplace_back(question, answers, correct);
     }
 
     return questions;
