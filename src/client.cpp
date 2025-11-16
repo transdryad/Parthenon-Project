@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <sstream>
 #include <string>
+#include <poll.h>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
@@ -19,14 +20,17 @@ int ask(Question question) {
     std::cout << "3: " << question.answers[2] << std::endl;
     std::cout << "4: " << question.answers[3] << std::endl;
     std::cout << "Your Answer: ";
-    int answer;
-    std::cin >> answer;
+    int answer = 0;
+    struct pollfd pfd = {.fd = 0, .events = POLLIN, .revents = 0};
+    poll(&pfd, 1, 30000);
+    if((pfd.revents | POLLIN) != 0)
+        std::cin >> answer;
     std::cout << std::endl;
     return answer;
 }
 
 Question parse(char* buffer) {
-    cout << "Buf: " << buffer << endl;;
+    // cout << "Buf: " << buffer << endl;;
     stringstream ss(string(buffer, strlen(buffer)));
     string t;
     string strings[5];
@@ -42,8 +46,16 @@ Question parse(char* buffer) {
 int
 main(int argc, char **argv)
 {
+    if(argc < 4){
+        cerr << "Usage: " << argv[0] << " <ipv4 server> <port> <nickname>" << endl;
+        exit(-1);
+    }
+
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock < 1) {cerr << "Error allocating socket"; exit(errno);}
+    if (sock < 1) {
+        cerr << "Error allocating socket" << endl;
+        exit(errno);
+    }
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(atoi(argv[2]));
@@ -52,12 +64,14 @@ main(int argc, char **argv)
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
 		exit(errno);
 
-	const char *msg = "Basic client-to-server test";
-	send(sock, msg, strlen(msg), 0);
-
 	char buffer[MAX_BUFF] = { 0 };
 	recv(sock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
+
+    uint16_t nick_len = strlen(argv[3]);
+    nick_len = htons(nick_len);
+	send(sock, &nick_len, 2, 0);
+	send(sock, argv[3], nick_len, 0);
 
     while(1){    
         memset(buffer, 0, MAX_BUFF);
@@ -71,7 +85,7 @@ main(int argc, char **argv)
 
     uint32_t score = 0;
     recv(sock, &score, 4, 0);
-    cout << "unconverted score: " << score << endl;
+    // cout << "unconverted score: " << score << endl;
     score = ntohl(score);
 
     cout << "Score: " << score << endl;

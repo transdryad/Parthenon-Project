@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <string>
+#include <cstdio>
 
 #define MAX_QUEUE 5
 #define MAX_BUFF 1024
@@ -13,6 +14,7 @@
 #include <optional>
 #include <fstream>
 #include "src/question.hpp"
+#include "src/user.hpp"
 
 std::string split(std::string input) {
     std::string substring;
@@ -64,11 +66,26 @@ std::vector<Question> parse(std::string filename) {
     return questions;
 }
 
+int
+send_question(User user, const void *buf, size_t size, int correct)
+{
+    send(user.sock, buf, size, 0);
+    time_t time_start = time(nullptr);
+    uint32_t ans;
+    recv(user.sock, &ans, 4, 0);
+    time_t time_end = time(nullptr);
+    ans = ntohl(ans);
+    if(ans == correct){
+        time_t loss = (1000 / 60) * (time_end - time_start);
+        return 1000 - loss;
+    } else
+        return 0;
+}
+
 int main(int argc, char **argv)
 {
-    uint32_t score = 0;
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <ip> <addr> <qfile>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <ip> <port> <qfile>" << std::endl;
         return 1;
     }
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -82,17 +99,25 @@ int main(int argc, char **argv)
 
     int b = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
     if (b == -1) {std::cerr << "Error binding to port"; exit(errno);}
-    listen(sock, MAX_QUEUE); /* should probably paralellized,
-                                so small queue per instance, if such */
 
-    int csock = accept(sock, nullptr, nullptr);
-    if (csock < 1) {std::cerr << "Error allocating socket"; exit(errno);}
-    char buffer[MAX_BUFF] = { 0 };
-    recv(csock, buffer, MAX_BUFF, 0);
-    std::cout << buffer << std::endl;
+    std::vector<User> users;
 
-    const char *msg = "Basic server-to-client test";
-    send(csock, msg, strlen(msg), 0);
+    std::cout << "Lobby open, press ENTER to start game." << std::endl;
+    for(int ch; (ch = std::getchar()) != EOF ;){
+        listen(sock, MAX_QUEUE); /* should probably paralellized,
+                                    so small queue per instance, if such */
+        int csock = accept(sock, nullptr, nullptr);
+        if(csock < 1){
+            std::cerr << "Error allocating socket" << std::endl;
+        }
+        const char *msg = "Connected!";
+        send(csock, msg, strlen(msg), 0);
+
+        users.emplace_back(csock);
+        std::cout << users.back().name << " joined." << std::endl;
+        if(ch == '\n')
+            break;
+    }
 
     std::vector<Question> questions = parse(argv[3]);
 
@@ -100,30 +125,24 @@ int main(int argc, char **argv)
         std::string packet;
         packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
         //cout << packet;
-        send(csock, packet.c_str(), strlen(packet.c_str()), 0);
-        time_t time_start = time(nullptr);
-        uint32_t ans;
-        recv(csock, &ans, 4, 0);
-        time_t time_end = time(nullptr);
-        ans = ntohl(ans);
-        if(ans == q.correct){
-            uint32_t loss = (1000 / 60) * (time_end - time_start);
-            score += 1000 - loss;
+
+        for(auto u : users){
+            u.score += send_question(u, packet.c_str(), strlen(packet.c_str()), q.correct);
         }
-        std::cout << "Time taken: " << time_end - time_start << std::endl;
-        std::cout << "Score loss: " << (1000 / 60) * (time_end - time_start) << std::endl;
         
         //std::cout << q.question << ":";
         //for (auto a : q.answers) { std::cout << " " << a; }
         //std::cout << ". " << q.correct << std::endl;
     }
     const char endmsg = '\xFF';
-    send(csock, &endmsg, 1, 0);
-    std::cout << "Score: " << score << std::endl;
-    score = htonl(score);
-    send(csock, &score, 4, 0);
-    
-    close(csock);
+    for(auto u : users){
+        send(u.sock, &endmsg, 1, 0);
+        //std::cout << "Score: " << u.score << std::endl;
+        u.score = htonl(u.score);
+        send(u.sock, &u.score, 4, 0);
+        close(u.sock);
+    }
+
     close(sock);
 
     return 0;
