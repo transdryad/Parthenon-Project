@@ -57,8 +57,8 @@ std::vector<Question> parse(std::string filename) {
             answers[3] = split(lines[i]);
             ++i;
             correct = lines[i].back() - '0';
+            questions.emplace_back(question, answers, correct);
         }
-        questions.emplace_back(question, answers, correct);
     }
 
     return questions;
