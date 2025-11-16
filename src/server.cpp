@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         recv(csock, &ans, 4, 0);
         time_t time_end = time(nullptr);
         ans = ntohl(ans);
-        if(ans - 1 == q.correct){
+        if(ans == q.correct){
             uint32_t loss = (1000 / 60) * (time_end - time_start);
             score += 1000 - loss;
         }
