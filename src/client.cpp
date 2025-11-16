@@ -70,8 +70,10 @@ main(int argc, char **argv)
 
     uint16_t nick_len = strlen(argv[3]);
     nick_len = htons(nick_len);
-	send(sock, &nick_len, 2, 0);
-	send(sock, argv[3], nick_len, 0);
+	if(send(sock, &nick_len, 2, 0) != 2)
+	    cerr << "nick_len not fully written!" << endl;
+	if(send(sock, argv[3], nick_len, 0) < nick_len)
+	    cerr << "argv[3] not fully written!" << endl;
 
     while(1){    
         memset(buffer, 0, MAX_BUFF);

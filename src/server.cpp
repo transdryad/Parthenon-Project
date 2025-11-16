@@ -76,9 +76,16 @@ send_question(User user, const void *buf, size_t size, int correct)
     uint32_t ans = 0;
 
     struct pollfd pfd = {.fd = user.sock, .events = POLLIN, .revents = 0};
-    while((pfd.revents & POLLIN) == 0)
+    while((pfd.revents & POLLIN) == 0){
         poll(&pfd, 1, -1);
-    recv(user.sock, &ans, 4, 0);
+        if((pfd.revents & POLLPRI) != 0)
+            exit(-1);
+        else if((pfd.revents & POLLHUP) != 0)
+            exit(-1);
+        else if((pfd.revents & POLLERR) != 0)
+            exit(-1);
+    }
+    recv(user.sock, &ans, 4, MSG_WAITALL);
     time_t time_end = time(nullptr);
     ans = ntohl(ans);
     std::cout << "Answered " << ans << std::endl;
