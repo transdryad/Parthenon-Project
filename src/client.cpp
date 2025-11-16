@@ -7,25 +7,29 @@
 #include <sstream>
 #include <string>
 #include <poll.h>
+#include <time.h>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
 
 using namespace std;
 
-int ask(Question question) {
+int ask(Question question, time_t *time_out) {
     std::cout << question.question << std::endl;
     std::cout << "1: " << question.answers[0] << std::endl;
     std::cout << "2: " << question.answers[1] << std::endl;
     std::cout << "3: " << question.answers[2] << std::endl;
     std::cout << "4: " << question.answers[3] << std::endl;
-    std::cout << "Your Answer: ";
+    std::cout << "Your Answer: " << std::endl;
     int answer = 0;
     struct pollfd pfd = {.fd = 0, .events = POLLIN, .revents = 0};
     poll(&pfd, 1, 30000);
-    if((pfd.revents | POLLIN) != 0)
+    time_t time_start = time(nullptr);
+    if((pfd.revents & POLLIN) != 0)
         std::cin >> answer;
-    std::cout << std::endl;
+    time_t time_end = time(nullptr);
+    time_out[0] = time_end - time_start;
+    std::cout << answer << std::endl;
     return answer;
 }
 
@@ -70,17 +74,26 @@ main(int argc, char **argv)
 
     uint16_t nick_len = strlen(argv[3]);
     nick_len = htons(nick_len);
-	send(sock, &nick_len, 2, 0);
-	send(sock, argv[3], nick_len, 0);
+	if(send(sock, &nick_len, 2, 0) != 2)
+	    cerr << "nick_len not fully written!" << endl;
+	if(send(sock, argv[3], nick_len, 0) < nick_len)
+	    cerr << "argv[3] not fully written!" << endl;
 
     while(1){    
         memset(buffer, 0, MAX_BUFF);
+        //struct pollfd pfd = {.fd = sock, .events = POLLIN, .revents = 0};
+        //while((pfd.revents & POLLIN) == 0)
+        //    poll(&pfd, 1, -1);
         recv(sock, buffer, MAX_BUFF, 0);
         if(buffer[0] == '\xFF')
             break;
         //parse(buffer);
-        uint32_t ans = htonl(ask(parse(buffer)));
-        send(sock, &ans, 4, 0);
+        time_t timer = 0;
+        uint8_t ans = ask(parse(buffer), &timer);
+        //std::cout << "htonl(ask(parse(buffer))) = " << (int)ans << std::endl;
+        send(sock, &ans, 1, 0);
+        uint32_t timepkt = htonl(timer);
+        send(sock, &timepkt, 4, 0);
     }
 
     uint32_t score = 0;
