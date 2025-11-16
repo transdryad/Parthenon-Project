@@ -19,11 +19,11 @@ int ask(Question question) {
     std::cout << "2: " << question.answers[1] << std::endl;
     std::cout << "3: " << question.answers[2] << std::endl;
     std::cout << "4: " << question.answers[3] << std::endl;
-    std::cout << "Your Answer: ";
+    std::cout << "Your Answer: " << std::endl;
     int answer = 0;
     struct pollfd pfd = {.fd = 0, .events = POLLIN, .revents = 0};
     poll(&pfd, 1, 30000);
-    if((pfd.revents | POLLIN) != 0)
+    if((pfd.revents & POLLIN) != 0)
         std::cin >> answer;
     std::cout << std::endl;
     return answer;
@@ -75,6 +75,9 @@ main(int argc, char **argv)
 
     while(1){    
         memset(buffer, 0, MAX_BUFF);
+        //struct pollfd pfd = {.fd = sock, .events = POLLIN, .revents = 0};
+        //while((pfd.revents & POLLIN) == 0)
+        //    poll(&pfd, 1, -1);
         recv(sock, buffer, MAX_BUFF, 0);
         if(buffer[0] == '\xFF')
             break;

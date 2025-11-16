@@ -7,6 +7,7 @@
 #include <time.h>
 #include <string>
 #include <cstdio>
+#include <poll.h>
 
 #define MAX_QUEUE 5
 #define MAX_BUFF 1024
@@ -69,12 +70,18 @@ std::vector<Question> parse(std::string filename) {
 int
 send_question(User user, const void *buf, size_t size, int correct)
 {
+    std::cout << "User socket fd: " << user.sock << std::endl;
     send(user.sock, buf, size, 0);
     time_t time_start = time(nullptr);
-    uint32_t ans;
+    uint32_t ans = 0;
+
+    struct pollfd pfd = {.fd = user.sock, .events = POLLIN, .revents = 0};
+    while((pfd.revents & POLLIN) == 0)
+        poll(&pfd, 1, -1);
     recv(user.sock, &ans, 4, 0);
     time_t time_end = time(nullptr);
     ans = ntohl(ans);
+    std::cout << "Answered " << ans << std::endl;
     if(ans == correct){
         time_t loss = (1000 / 60) * (time_end - time_start);
         return 1000 - loss;
@@ -122,12 +129,16 @@ int main(int argc, char **argv)
 
     std::vector<Question> questions = parse(argv[3]);
 
+    std::cout << "Number of questions: " << questions.size() << std::endl;
+    std::cout << "Number of users: " << users.size() << std::endl;
+
     for (auto q : questions) {
         std::string packet;
         packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
         //cout << packet;
 
         for(auto u : users){
+            std::cout << "Polling user " << u.name << " with question \"" << q.question << "\"." << std::endl;
             u.score += send_question(u, packet.c_str(), strlen(packet.c_str()), q.correct);
         }
         
