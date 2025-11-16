@@ -1,0 +1,12 @@
+[binaries]
+c = 'x86_64-apple-darwin25.1-clang'
+cpp = 'x86_64-apple-darwin25.1-clang++'
+ar = 'x86_64-apple-darwin25.1-ar'
+strip = 'x86_64-apple-darwin25.1-strip'
+
+[host_machine]
+system = 'darwin'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
+
