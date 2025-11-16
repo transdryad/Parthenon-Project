@@ -7,6 +7,7 @@
 #include <time.h>
 #include <string>
 #include <cstdio>
+#include <algorithm>
 
 #define MAX_QUEUE 5
 #define MAX_BUFF 1024
@@ -141,9 +142,16 @@ int main(int argc, char **argv)
         //std::cout << "Score: " << u.score << std::endl;
         u.score = htonl(u.score);
         send(u.sock, &u.score, 4, 0);
-        close(u.sock);
     }
-
+    std::sort(users.begin(), users.end(), []( const auto& lhs, const auto& rhs ){
+            return lhs.score > rhs.score;
+            });
+    for(int i = 0; i < users.size(); i++) {
+        std::cout << i + 1 << ": " << users[i].name << std::endl;
+        char place = (char)i;
+        send(users[i].sock, &place, 1, 0);
+        close(users[i].sock);
+    }
     close(sock);
 
     return 0;

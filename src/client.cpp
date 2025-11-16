@@ -89,7 +89,10 @@ main(int argc, char **argv)
     score = ntohl(score);
 
     cout << "Score: " << score << endl;
+    char place;
+    recv(sock, &place, 1, 0);
+    cout << "Place: " << place - '0' + 1 << endl;
 
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 }
