@@ -57,11 +57,23 @@ main(int argc, char **argv)
 	char buffer[MAX_BUFF] = { 0 };
 	recv(sock, buffer, MAX_BUFF, 0);
 	cout << buffer << endl;
-        
+
+    while(1){    
         memset(buffer, 0, MAX_BUFF);
         recv(sock, buffer, MAX_BUFF, 0);
+        if(buffer[0] == '\xFF')
+            break;
         //parse(buffer);
-        ask(parse(buffer));
+        uint32_t ans = htonl(ask(parse(buffer)));
+        send(sock, &ans, 4, 0);
+    }
+
+    uint32_t score = 0;
+    recv(sock, &score, 4, 0);
+    cout << "unconverted score: " << score << endl;
+    score = ntohl(score);
+
+    cout << "Score: " << score << endl;
 
 	close(sock);
 	return 0;
