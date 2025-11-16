@@ -7,13 +7,14 @@
 #include <sstream>
 #include <string>
 #include <poll.h>
+#include <time.h>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
 
 using namespace std;
 
-int ask(Question question) {
+int ask(Question question, time_t *time_out) {
     std::cout << question.question << std::endl;
     std::cout << "1: " << question.answers[0] << std::endl;
     std::cout << "2: " << question.answers[1] << std::endl;
@@ -23,8 +24,11 @@ int ask(Question question) {
     int answer = 0;
     struct pollfd pfd = {.fd = 0, .events = POLLIN, .revents = 0};
     poll(&pfd, 1, 30000);
+    time_t time_start = time(nullptr);
     if((pfd.revents & POLLIN) != 0)
         std::cin >> answer;
+    time_t time_end = time(nullptr);
+    time_out[0] = time_end - time_start;
     std::cout << answer << std::endl;
     return answer;
 }
@@ -84,9 +88,12 @@ main(int argc, char **argv)
         if(buffer[0] == '\xFF')
             break;
         //parse(buffer);
-        uint32_t ans = htonl(ask(parse(buffer)));
-        std::cout << "htonl(ask(parse(buffer))) = " << ans << std::endl;
-        send(sock, &ans, 4, 0);
+        time_t timer = 0;
+        uint8_t ans = ask(parse(buffer), &timer);
+        std::cout << "htonl(ask(parse(buffer))) = " << (int)ans << std::endl;
+        send(sock, &ans, 1, 0);
+        uint32_t timepkt = htonl(timer);
+        send(sock, &timepkt, 4, 0);
     }
 
     uint32_t score = 0;
