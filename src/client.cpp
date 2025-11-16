@@ -90,7 +90,7 @@ main(int argc, char **argv)
         //parse(buffer);
         time_t timer = 0;
         uint8_t ans = ask(parse(buffer), &timer);
-        std::cout << "htonl(ask(parse(buffer))) = " << (int)ans << std::endl;
+        //std::cout << "htonl(ask(parse(buffer))) = " << (int)ans << std::endl;
         send(sock, &ans, 1, 0);
         uint32_t timepkt = htonl(timer);
         send(sock, &timepkt, 4, 0);
