@@ -3,7 +3,10 @@
 Made Hazel V & [@t3mp0r4ry23](https://github.com/t3mp0r4ry23)
 
 Basic idea: Kahoot, but in the terminal (need a server which can handle multiple clients).
-Built using c++ with meson. If provided executables don't fuction, please compile from source.
+Built using c++ with meson.
+Some challenges we had were specifically involving our networking code producing mysterious letters, but we got it somewhat fixed. This project helped us learn a lot about networking.
+Be sure to chose the correct executable from releases.
+If provided executables don't fuction, please compile from source.
 
 To build: meson setup build && meson compile -C build
 
