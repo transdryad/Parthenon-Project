@@ -25,7 +25,7 @@ int ask(Question question) {
     poll(&pfd, 1, 30000);
     if((pfd.revents & POLLIN) != 0)
         std::cin >> answer;
-    std::cout << std::endl;
+    std::cout << answer << std::endl;
     return answer;
 }
 
@@ -83,6 +83,7 @@ main(int argc, char **argv)
             break;
         //parse(buffer);
         uint32_t ans = htonl(ask(parse(buffer)));
+        std::cout << "htonl(ask(parse(buffer))) = " << ans << std::endl;
         send(sock, &ans, 4, 0);
     }
 
