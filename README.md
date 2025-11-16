@@ -10,6 +10,8 @@ If provided executables don't fuction, please compile from source.
 
 To build: meson setup build && meson compile -C build
 
+Note: Windows users must build with cygwin as Tahoot uses unix sockets.
+
 ## Usage:
 
 See example.ini for an example question file.
