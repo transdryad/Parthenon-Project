@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <string>
 
 #define MAX_QUEUE 5
 #define MAX_BUFF 1024

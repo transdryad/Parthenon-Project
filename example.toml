@@ -2,7 +2,9 @@
 # ip or smth ig?
 
 questions = [
-    ["How many dogs can live in a house?", ["1", "3", "5", "7"], 2,],
+    ["On what floor is the sleeping area?", ["1", "2", "3", "4"], 2,],
+    ["Can we use the elevators?", ["Yes", "Never", "With Baggage", "If you're nice"], 3,],
+    ["What time did the doors lock after lunch?", ["3pm", "4pm", "5pm", "6pm"], 2,],
 ]
 
 

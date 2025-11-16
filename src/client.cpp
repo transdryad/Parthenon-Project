@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sstream>
+#include <string>
 
 #define MAX_BUFF 1024
 #include "src/question.hpp"
