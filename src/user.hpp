@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unistd.h>
+#include <cstdint>
 
 class User {
     public:
