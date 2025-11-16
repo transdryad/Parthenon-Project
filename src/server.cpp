@@ -39,9 +39,9 @@ std::vector<Question> parse(std::string filename) {
         std::cerr << "File note found/read error for questions";
         exit(1);
     }
-    
+
     ifs.close();
-    
+
     //std::cout << tbl["questions"] << std::endl;
     for (size_t i = 0; i < lines.size(); i++) { //put questions in our nice data structure
         std::string question;
@@ -68,7 +68,7 @@ std::vector<Question> parse(std::string filename) {
     return questions;
 }
 
-void
+    void
 send_question(User user, const void *buf, size_t size)
 {
     char trash[MAX_BUFF] = {0};
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
                     users[i].score += 1000 - ((1000 / 60) * (taken));
             }
         }
-        
+
         //std::cout << q.question << ":";
         //for (auto a : q.answers) { std::cout << " " << a; }
         //std::cout << ". " << q.correct << std::endl;

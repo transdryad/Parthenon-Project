@@ -47,7 +47,7 @@ Question parse(char* buffer) {
     return Question(strings[0], answers, 5);
 }
 
-int
+    int
 main(int argc, char **argv)
 {
     if(argc < 4){
@@ -55,29 +55,29 @@ main(int argc, char **argv)
         exit(-1);
     }
 
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 1) {
         cerr << "Error allocating socket" << endl;
         exit(errno);
     }
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(atoi(argv[2]));
-	addr.sin_addr.s_addr = inet_addr(argv[1]);
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(atoi(argv[2]));
+    addr.sin_addr.s_addr = inet_addr(argv[1]);
 
-	if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-		exit(errno);
+    if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+        exit(errno);
 
-	char buffer[MAX_BUFF] = { 0 };
-	recv(sock, buffer, MAX_BUFF, 0);
-	cout << buffer << endl;
+    char buffer[MAX_BUFF] = { 0 };
+    recv(sock, buffer, MAX_BUFF, 0);
+    cout << buffer << endl;
 
     uint16_t nick_len = strlen(argv[3]);
     nick_len = htons(nick_len);
-	if(send(sock, &nick_len, 2, 0) != 2)
-	    cerr << "nick_len not fully written!" << endl;
-	if(send(sock, argv[3], nick_len, 0) < nick_len)
-	    cerr << "argv[3] not fully written!" << endl;
+    if(send(sock, &nick_len, 2, 0) != 2)
+        cerr << "nick_len not fully written!" << endl;
+    if(send(sock, argv[3], nick_len, 0) < nick_len)
+        cerr << "argv[3] not fully written!" << endl;
 
     while(1){    
         memset(buffer, 0, MAX_BUFF);
@@ -103,6 +103,6 @@ main(int argc, char **argv)
 
     cout << "Score: " << score << endl;
 
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 }
