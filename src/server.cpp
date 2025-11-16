@@ -103,7 +103,9 @@ int main(int argc, char **argv)
     std::vector<User> users;
 
     std::cout << "Lobby open, press ENTER to start game." << std::endl;
-    for(int ch; (ch = std::getchar()) != EOF ;){
+    char ch = '\0';
+    while(ch != '\n'){
+        //std::cout << "Looped - listening again." << std::endl;
         listen(sock, MAX_QUEUE); /* should probably paralellized,
                                     so small queue per instance, if such */
         int csock = accept(sock, nullptr, nullptr);
@@ -115,8 +117,7 @@ int main(int argc, char **argv)
 
         users.emplace_back(csock);
         std::cout << users.back().name << " joined." << std::endl;
-        if(ch == '\n')
-            break;
+        ch = std::getchar();
     }
 
     std::vector<Question> questions = parse(argv[3]);
