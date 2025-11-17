@@ -8,9 +8,11 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
+#include <poll.h>
+#include <thread>
 
 #define MAX_QUEUE 5
-#define MAX_BUFF 1024
+#define MAX_BUFF 4096
 #include <vector>
 #include <optional>
 #include <fstream>
@@ -38,9 +40,9 @@ std::vector<Question> parse(std::string filename) {
         std::cerr << "File note found/read error for questions";
         exit(1);
     }
-    
+
     ifs.close();
-    
+
     //std::cout << tbl["questions"] << std::endl;
     for (size_t i = 0; i < lines.size(); i++) { //put questions in our nice data structure
         std::string question;
@@ -67,20 +69,14 @@ std::vector<Question> parse(std::string filename) {
     return questions;
 }
 
-int
-send_question(User user, const void *buf, size_t size, int correct)
+    void
+send_question(User user, const void *buf, size_t size)
 {
+    char trash[MAX_BUFF] = {0};
+    std::cout << "User socket fd: " << user.sock << std::endl;
+    recv(user.sock, trash, MAX_BUFF, MSG_DONTWAIT);
     send(user.sock, buf, size, 0);
-    time_t time_start = time(nullptr);
-    uint32_t ans;
-    recv(user.sock, &ans, 4, 0);
-    time_t time_end = time(nullptr);
-    ans = ntohl(ans);
-    if(ans == correct){
-        time_t loss = (1000 / 60) * (time_end - time_start);
-        return 1000 - loss;
-    } else
-        return 0;
+    return;
 }
 
 int main(int argc, char **argv)
@@ -123,15 +119,36 @@ int main(int argc, char **argv)
 
     std::vector<Question> questions = parse(argv[3]);
 
+    std::cout << "Number of questions: " << questions.size() << std::endl;
+    std::cout << "Number of users: " << users.size() << std::endl;
+
     for (auto q : questions) {
         std::string packet;
+        std::vector<struct pollfd> pfds;
         packet = q.question + "%" + q.answers[0] + "%" + q.answers[1] + "%" + q.answers[2] + "%" + q.answers[3];
         //cout << packet;
 
-        for(auto u : users){
-            u.score += send_question(u, packet.c_str(), strlen(packet.c_str()), q.correct);
+        for(size_t i = 0; i < users.size(); i++){
+            std::cout << "Polling user " << users[i].name << " with question \"" << q.question << "\"." << std::endl;
+            send_question(users[i], packet.c_str(), strlen(packet.c_str()));
+            struct pollfd inter = {users[i].sock, POLLIN, 0};
+            pfds.push_back(inter);
         }
-        
+
+        poll((struct pollfd *)&pfds[0], pfds.size(), 35000);
+
+        for(size_t i = 0; i < pfds.size(); i++){
+            if((pfds[i].revents & POLLIN) != 0){
+                uint8_t ans = 0;
+                uint32_t taken = 0;
+                recv(users[i].sock, &ans, 1, 0);
+                recv(users[i].sock, &taken, 4, MSG_WAITALL);
+                taken = ntohl(taken);
+                if((int)ans == q.correct)
+                    users[i].score += 1000 - ((1000 / 60) * (taken));
+            }
+        }
+
         //std::cout << q.question << ":";
         //for (auto a : q.answers) { std::cout << " " << a; }
         //std::cout << ". " << q.correct << std::endl;
@@ -139,7 +156,7 @@ int main(int argc, char **argv)
     const char endmsg = '\xFF';
     for(auto u : users){
         send(u.sock, &endmsg, 1, 0);
-        //std::cout << "Score: " << u.score << std::endl;
+        std::cout << "Score: " << u.score << std::endl;
         u.score = htonl(u.score);
         send(u.sock, &u.score, 4, 0);
     }

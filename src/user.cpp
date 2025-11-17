@@ -10,5 +10,6 @@ User::User(int sock) {
     recv(sock, &name_len, 2, 0);
     name_len = ntohs(name_len);
     recv(sock, buffer, name_len, 0);
+    this->sock = sock;
     this->name = buffer;
 }
